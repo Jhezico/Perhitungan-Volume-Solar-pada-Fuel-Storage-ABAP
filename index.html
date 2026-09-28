@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Form input perhitungan volume fuel storage PT. Amanah Batu Alam Persada berdasarkan ketinggian cairan, dengan laporan cetak dan unduhan PDF.">
 <title>PT. Amanah Batu Alam Persada — Perhitungan Volume Tangki Terra</title>
 <style>
   :root {
@@ -61,6 +62,7 @@
     border-color: var(--black); background: var(--gray-bg); color: var(--black);
   }
   .warn { font-size: 0.75rem; color: var(--danger); margin: -2px 0 8px; min-height: 1em; }
+  .form-warning { font-size: 0.75rem; color: var(--danger); font-weight: 600; min-height: 1em; margin-bottom: 4px; text-align: center; }
 
   .forms { display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; align-items: start; margin-bottom: 8px; }
   .form-section {
@@ -74,13 +76,10 @@
     padding-bottom: 6px; border-bottom: 1px solid var(--gray-light);
   }
   .section-header h2 { font-size: 0.95rem; font-weight: 700; color: var(--black); }
-  .badge { font-size: 0.65rem; padding: 2px 6px; border-radius: 20px; font-weight: 600; }
-  .badge.awal-badge { background: var(--gray-light); color: #374151; }
-  .badge.akhir-badge { background: var(--red-tint); color: var(--red-tint-text); }
   .form-field { margin-bottom: 6px; }
   .form-field label {
     display: block; font-weight: 600; font-size: 0.7rem; color: var(--text);
-    margin-bottom: 1px; text-transform: uppercase;
+    margin-bottom: 1px;
   }
   .form-field input[type="date"], .form-field input[type="time"],
   .form-field input[type="number"], .form-field input[type="text"], .form-field textarea {
@@ -108,10 +107,11 @@
     background: var(--black);
     color: var(--white); border-radius: 8px; padding: 6px; text-align: center; margin-top: 4px;
   }
-  .volume-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: #FCA5A5; }
+  .volume-label { font-size: 0.65rem; letter-spacing: 0.5px; color: #FCA5A5; }
   .volume-value { font-size: 1.3rem; font-weight: 800; }
   .volume-unit { font-size: 0.75rem; opacity: 0.7; }
   .extra-fields { border-radius: 8px; padding: 8px; border: 1px solid var(--border); margin-bottom: 8px; }
+  .extra-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
   .actions { display: flex; gap: 10px; justify-content: center; margin: 12px 0 0; }
   .actions button { margin: 0; }
@@ -131,12 +131,6 @@
   .btn-print.btn-ghost { background: var(--white); color: var(--black); border: 2px solid var(--black); }
   .btn-print.btn-ghost:hover { background: var(--black); color: var(--white); }
 
-  /* Stage render PDF: clone #report dengan gaya print, di luar layar */
-  .pdf-stage {
-    position: fixed; left: -99999px; top: 0; width: 794px;
-    padding: 12mm; background: #fff;
-  }
-
   @media (max-width: 600px) {
     .forms { grid-template-columns: 1fr; }
     header.app-header .logo { height: 40px; }
@@ -149,7 +143,7 @@
   /* Stage render PDF: off-screen, tidak terlihat user */
   .pdf-stage {
     position: fixed; left: -9999px; top: 0;
-    width: 794px; background: #fff; z-index: -1;
+    width: 794px; padding: 12mm; background: #fff; z-index: -1;
   }
 
   /* =====================================================
@@ -208,7 +202,9 @@
     .r-card.b { background: #F1F5F9; color: var(--black); }
     .r-card.c { background: var(--black); color: #fff; }
     .r-two { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+    .r-two.r-three { grid-template-columns: repeat(3, 1fr); }
     .r-two .val { padding: 2mm 4mm; font-weight: 700; font-size: 11pt; overflow-wrap: anywhere; }
+    .r-sub { padding: 0 4mm; font-size: 8pt; color: var(--gray); font-weight: 600; }
 
     /* Footer mengikuti alur konten (aman, tidak menimpa isi) */
     .r-footer { border-top: 0.3mm solid #E2E8F0; padding-top: 1.5mm; margin-top: 0;
@@ -225,7 +221,6 @@
     <div>
       <h1>PT. Amanah Batu Alam Persada</h1>
       <p class="header-title">Perhitungan Fuel Storage (12.000 Liter)</p>
-      <!-- <p class="header-sub">Terra Fuel Tank (12.000 Liter)</p> -->
     </div>
   </header>
 
@@ -245,7 +240,7 @@
 
   <div class="forms">
     <div class="form-section awal">
-      <div class="section-header"><h2>Form Awal</h2><span class="badge awal-badge">AWAL</span></div>
+      <div class="section-header"><h2>Form Awal</h2></div>
       <div class="form-field">
         <label>Foto</label>
         <div class="photo-upload">
@@ -270,7 +265,7 @@
     </div>
 
     <div class="form-section akhir">
-      <div class="section-header"><h2>Form Akhir</h2><span class="badge akhir-badge">AKHIR</span></div>
+      <div class="section-header"><h2>Form Akhir</h2></div>
       <div class="form-field">
         <label>Foto</label>
         <div class="photo-upload">
@@ -296,9 +291,15 @@
   </div>
 
   <div class="extra-fields">
-    <div class="form-field">
-      <label>Penanggung Jawab</label>
-      <input type="text" id="nama-pj" placeholder="Nama penanggung jawab">
+    <div class="extra-row">
+      <div class="form-field">
+        <label>Penanggung Jawab</label>
+        <input type="text" id="nama-pj" placeholder="Nama penanggung jawab">
+      </div>
+      <div class="form-field">
+        <label>Volume Rencana (Liter)</label>
+        <input type="number" id="vol-rencana" min="0" step="0.01" inputmode="decimal" placeholder="0">
+      </div>
     </div>
     <div class="form-field">
       <label>Keterangan</label>
@@ -307,6 +308,7 @@
   </div>
 
   <div class="actions">
+    <div class="form-warning" id="form-warning"></div>
     <button class="btn-print btn-ghost" id="btn-cetak" type="button">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
@@ -367,8 +369,13 @@
       <div class="r-card b"><div class="l">Vol Akhir</div><div class="v" id="r-sum-akhir"></div></div>
       <div class="r-card c"><div class="l" id="r-sum-label">Tambah</div><div class="v" id="r-sum-tambah"></div></div>
     </div>
-    <div class="r-two">
+    <div class="r-two r-three">
       <div><div class="r-bar">Lama Pengisian</div><div class="val" id="r-durasi"></div></div>
+      <div>
+        <div class="r-bar">Selisih Volume</div>
+        <div class="val" id="r-selisih">-</div>
+        <div class="r-sub" id="r-selisih-sub"></div>
+      </div>
       <div><div class="r-bar">Penanggung Jawab</div><div class="val" id="r-pj"></div></div>
     </div>
   </div>
@@ -426,37 +433,60 @@ function heightOf(side) {
 
 /* ---------- Update layar ---------- */
 function updateVolume(side) {
-  const raw = parseFloat($('tinggi-' + side).value);
+  const tinggi = heightOf(side);
+  const raw = $('tinggi-' + side).value.trim();
   const hint = $('hint-' + side);
-  if (!isNaN(raw) && (raw > H_MAX || raw < 0)) {
-    hint.textContent = 'Di luar batas tangki (0 - ' + fmt(H_MAX) + ' cm), dihitung sebagai ' + fmt(heightOf(side)) + ' cm';
+  const num = parseFloat(raw);
+  if (raw !== '' && !isNaN(num) && (num > H_MAX || num < 0)) {
+    hint.textContent = 'Di luar batas tangki (0 - ' + fmt(H_MAX) + ' cm), dihitung sebagai ' + fmt(tinggi) + ' cm';
     hint.classList.add('err');
   } else {
     hint.textContent = 'Nilai: 0 - ' + fmt(H_MAX) + ' cm';
     hint.classList.remove('err');
   }
-  $('volume-' + side).textContent = fmt(calculateVolume(heightOf(side)));
+  $('volume-' + side).textContent = fmt(calculateVolume(tinggi));
   checkFlow();
 }
 function checkFlow() {
   const diff = calculateVolume(heightOf('akhir')) - calculateVolume(heightOf('awal'));
   const flow = document.querySelector('input[name="flow"]:checked').value;
-  let msg = '';
-  if (diff > 0.005 && flow === 'keluar') msg = 'Volume bertambah, tetapi aliran dipilih "Keluar". Periksa kembali.';
-  if (diff < -0.005 && flow === 'masuk') msg = 'Volume berkurang, tetapi aliran dipilih "Masuk". Periksa kembali.';
-  $('flow-warning').textContent = msg;
+  const msgs = [];
+  if (diff > 0.005 && flow === 'keluar') msgs.push('Volume bertambah, tetapi aliran dipilih "Keluar". Periksa kembali.');
+  if (diff < -0.005 && flow === 'masuk') msgs.push('Volume berkurang, tetapi aliran dipilih "Masuk". Periksa kembali.');
+  /* Warning jam akhir sebelum jam awal */
+  const ta = $('tanggal-awal').value, tb = $('tanggal-akhir').value;
+  const ja = $('jam-awal').value, jb = $('jam-akhir').value;
+  if (ta && tb && ja && jb && new Date(tb + 'T' + jb) <= new Date(ta + 'T' + ja)) {
+    msgs.push('Jam akhir tercatat sebelum jam awal.');
+  }
+  $('flow-warning').textContent = msgs.join(' ');
 }
 
 /* ---------- Foto: koreksi orientasi + perkecil (max 1400px) ---------- */
-async function compressPhoto(file, maxSide = 1400, quality = 0.85) {
-  const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
-  const scale = Math.min(1, maxSide / Math.max(bmp.width, bmp.height));
+function drawScaled(img, maxSide, quality) {
+  const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
   const c = document.createElement('canvas');
-  c.width = Math.round(bmp.width * scale);
-  c.height = Math.round(bmp.height * scale);
-  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
-  bmp.close && bmp.close();
+  c.width = Math.round(img.width * scale);
+  c.height = Math.round(img.height * scale);
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
   return c.toDataURL('image/jpeg', quality);
+}
+async function compressPhoto(file, maxSide = 1400, quality = 0.85) {
+  if ('createImageBitmap' in window) {
+    try {
+      const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+      const url = drawScaled(bmp, maxSide, quality);
+      bmp.close && bmp.close();
+      return url;
+    } catch (e) { /* jatuh ke fallback di bawah */ }
+  }
+  /* Fallback browser tanpa createImageBitmap (orientasi EXIF tidak dikoreksi) */
+  return await new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => res(drawScaled(img, maxSide, quality));
+    img.onerror = () => rej(new Error('Foto tidak dapat dibaca'));
+    img.src = URL.createObjectURL(file);
+  });
 }
 function renderPhoto(side) {
   const box = $('r-photo-' + side);
@@ -491,13 +521,26 @@ function setupPhoto(side) {
   });
 }
 
+/* ---------- Validasi sebelum cetak / unduh ---------- */
+function validateForm() {
+  const belum = [];
+  if (!$('nama-pj').value.trim()) belum.push('Penanggung Jawab');
+  if (!$('tinggi-awal').value.trim()) belum.push('Ketinggian Awal');
+  if (!$('tinggi-akhir').value.trim()) belum.push('Ketinggian Akhir');
+  if (belum.length) {
+    $('form-warning').textContent = 'Belum diisi: ' + belum.join(', ') + '. Lengkapi dulu sebelum mencetak.';
+    return false;
+  }
+  $('form-warning').textContent = '';
+  return true;
+}
 /* ---------- Isi laporan cetak ---------- */
 function durasi() {
   const ta = $('tanggal-awal').value, tb = $('tanggal-akhir').value;
   const ja = $('jam-awal').value, jb = $('jam-akhir').value;
   if (!ta || !tb || !ja || !jb) return '-';
   const min = Math.round((new Date(tb + 'T' + jb) - new Date(ta + 'T' + ja)) / 60000);
-  if (!(min > 0)) return '-';
+  if (min <= 0) return '- (jam akhir sebelum jam awal)';
   return Math.floor(min / 60) + ' jam ' + (min % 60) + ' menit';
 }
 function buildReport() {
@@ -521,6 +564,19 @@ function buildReport() {
   $('r-sum-tambah').textContent = fmt(Math.abs(diff)) + ' L';
   $('r-durasi').textContent = durasi();
   $('r-pj').textContent = $('nama-pj').value.trim() || '-';
+
+  /* Selisih Volume Rencana vs Aktual */
+  const rencana = parseFloat($('vol-rencana').value) || 0;
+  const aktual = Math.abs(vB - vA);
+  $('r-selisih-sub').textContent = 'Aktual ' + fmt(aktual) + ' L · Rencana ' + (rencana > 0 ? fmt(rencana) + ' L' : '-');
+  if (rencana > 0) {
+    const pct = (aktual - rencana) / rencana * 100;
+    if (pct > 0.005) $('r-selisih').textContent = 'Lebih ' + fmt(pct).replace(/,00$/, '') + '%';
+    else if (pct < -0.005) $('r-selisih').textContent = 'Kurang ' + fmt(Math.abs(pct)).replace(/,00$/, '') + '%';
+    else $('r-selisih').textContent = 'Sesuai';
+  } else {
+    $('r-selisih').textContent = '-';
+  }
 }
 
 /* ---------- Unduh PDF asli (bukan menu printer) ---------- */
@@ -603,10 +659,17 @@ async function unduhPDF() {
 /* ---------- Event ---------- */
 setupPhoto('awal'); setupPhoto('akhir'); renderPhoto('awal'); renderPhoto('akhir');
 ['awal', 'akhir'].forEach(s => $('tinggi-' + s).addEventListener('input', () => updateVolume(s)));
+['tanggal-awal', 'tanggal-akhir', 'jam-awal', 'jam-akhir'].forEach(id =>
+  $(id).addEventListener('input', checkFlow));
 document.querySelectorAll('input[name="flow"]').forEach(r => r.addEventListener('change', checkFlow));
 window.addEventListener('beforeprint', buildReport);   // juga jalan saat Ctrl+P
-$('btn-cetak').addEventListener('click', () => window.print());
-$('btn-print').addEventListener('click', unduhPDF);
+$('btn-cetak').addEventListener('click', () => { if (validateForm()) window.print(); });
+$('btn-print').addEventListener('click', () => { if (validateForm()) unduhPDF(); });
+
+/* Guard: Volume Rencana hanya angka positif */
+$('vol-rencana').addEventListener('input', e => {
+  if (e.target.value.startsWith('-')) e.target.value = e.target.value.replace(/-/g, '');
+});
 
 /* Nilai awal (WITA) */
 const now = nowWITA();
