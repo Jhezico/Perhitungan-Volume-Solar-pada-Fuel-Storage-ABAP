@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PT. Amanah Batu Alam Persada — Perhitungan Volume Tangki Terra</title>
+<style>
+  :root {
+    --black: #141414; --black-soft: #1F1F1F;
+    --red: #C41E2E; --red-dark: #8E1020;
+    --red-tint: #FEE2E2; --red-tint-text: #B91C1C;
+    --gray: #6B7280; --gray-light: #E5E7EB; --gray-bg: #F3F4F6;
+    --white: #FFFFFF; --text: #1F2937; --text-light: #9CA3AF;
+    --border: #D1D5DB; --danger: #EF4444;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--gray-bg); color: var(--text); line-height: 1.6; padding: 16px;
+  }
+
+  /* =====================================================
+     TAMPILAN LAYAR (form input)
+     ===================================================== */
+  .page {
+    width: 100%; max-width: 210mm; margin: 0 auto; padding: 10mm;
+    background: var(--white); border-radius: 8px;
+  }
+  header.app-header {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 10px; padding: 12px 16px;
+    background: linear-gradient(135deg, var(--black-soft), var(--black));
+    border-bottom: 4px solid var(--red);
+    border-radius: 8px; color: var(--white);
+  }
+  header.app-header .logo {
+    height: 52px; width: auto; flex: none;
+    background: var(--white); border-radius: 8px; padding: 5px;
+  }
+  header.app-header h1 { font-size: 1.15rem; font-weight: 800; letter-spacing: 0.01em; }
+  header.app-header .header-title { font-size: 0.9rem; font-weight: 500; opacity: 0.75; line-height: 100%; }
+  header.app-header .header-sub { font-size: 0.7rem; opacity: 0.5; margin-top: 1px; line-height: 100%; }
+  .pengumuman {
+    background: var(--red);
+    color: var(--white); text-align: center; padding: 6px 14px;
+    border-radius: 8px; font-weight: 600; font-size: 0.85rem; margin-bottom: 8px;
+  }
+  .radio-group { display: flex; gap: 10px; margin-bottom: 8px; }
+  .radio-card { flex: 1; position: relative; }
+  .radio-card input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+  .radio-card label {
+    display: flex; align-items: center; justify-content: center; padding: 6px;
+    background: var(--white); border: 2px solid var(--border); border-radius: 8px;
+    cursor: pointer; font-weight: 600; font-size: 0.8rem;
+  }
+  .radio-card input[type="radio"]:focus-visible + label { outline: 2px solid var(--red); outline-offset: 2px; }
+  .radio-card input[value="keluar"]:checked + label {
+    border-color: var(--red); background: var(--red-tint); color: var(--red-tint-text);
+  }
+  .radio-card input[value="masuk"]:checked + label {
+    border-color: var(--black); background: var(--gray-bg); color: var(--black);
+  }
+  .warn { font-size: 0.75rem; color: var(--danger); margin: -2px 0 8px; min-height: 1em; }
+
+  .forms { display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; align-items: start; margin-bottom: 8px; }
+  .form-section {
+    background: var(--white); border-radius: 8px; padding: 8px;
+    border: 1px solid var(--border); border-top: 4px solid var(--black);
+  }
+  .form-section.awal { border-top-color: var(--black); }
+  .form-section.akhir { border-top-color: var(--red); }
+  .section-header {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
+    padding-bottom: 6px; border-bottom: 1px solid var(--gray-light);
+  }
+  .section-header h2 { font-size: 0.95rem; font-weight: 700; color: var(--black); }
+  .badge { font-size: 0.65rem; padding: 2px 6px; border-radius: 20px; font-weight: 600; }
+  .badge.awal-badge { background: var(--gray-light); color: #374151; }
+  .badge.akhir-badge { background: var(--red-tint); color: var(--red-tint-text); }
+  .form-field { margin-bottom: 6px; }
+  .form-field label {
+    display: block; font-weight: 600; font-size: 0.7rem; color: var(--text);
+    margin-bottom: 1px; text-transform: uppercase;
+  }
+  .form-field input[type="date"], .form-field input[type="time"],
+  .form-field input[type="number"], .form-field input[type="text"], .form-field textarea {
+    width: 100%; padding: 4px 6px; border: 1px solid var(--border); border-radius: 4px;
+    font-size: 0.85rem; font-family: inherit; background: var(--white); color: var(--text);
+  }
+  .form-field textarea { resize: vertical; min-height: 44px; }
+  .form-field .hint { font-size: 0.65rem; color: var(--text-light); margin-top: 1px; }
+  .form-field .hint.err { color: var(--danger); font-weight: 600; }
+  .form-field input:focus-visible, .form-field textarea:focus-visible {
+    outline: 2px solid var(--red); outline-offset: 1px;
+  }
+
+  .photo-upload {
+    border: 2px dashed var(--border); border-radius: 8px; padding: 12px;
+    text-align: center; cursor: pointer; position: relative;
+  }
+  .photo-upload input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .photo-upload .upload-icon { font-size: 1.5rem; color: var(--gray); }
+  .photo-upload .upload-text { font-size: 0.75rem; color: var(--gray); }
+  .photo-preview { display: none; margin-top: 8px; }
+  .photo-preview img { display: block; margin: 0 auto; max-width: 100%; max-height: 220px; object-fit: contain; border-radius: 4px; }
+
+  .volume-display {
+    background: var(--black);
+    color: var(--white); border-radius: 8px; padding: 6px; text-align: center; margin-top: 4px;
+  }
+  .volume-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: #FCA5A5; }
+  .volume-value { font-size: 1.3rem; font-weight: 800; }
+  .volume-unit { font-size: 0.75rem; opacity: 0.7; }
+  .extra-fields { border-radius: 8px; padding: 8px; border: 1px solid var(--border); margin-bottom: 8px; }
+
+  .btn-print {
+    width: fit-content; padding: 8px 20px;
+    background: var(--red);
+    color: var(--white); border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; gap: 6px; margin: 12px auto 0;
+  }
+  .btn-print svg { width: 18px; height: 18px; }
+  .btn-print:hover { background: var(--red-dark); }
+  .btn-print:focus-visible { outline: 2px solid var(--black); outline-offset: 2px; }
+
+  @media (max-width: 600px) {
+    .forms { grid-template-columns: 1fr; }
+    header.app-header .logo { height: 40px; }
+    header.app-header h1 { font-size: 1rem; }
+  }
+
+  /* Laporan cetak disembunyikan di layar */
+  #report { display: none; }
+
+  /* =====================================================
+     TAMPILAN CETAK / PDF  (dinamis, tanpa tinggi tetap)
+     ===================================================== */
+  @page { size: A4; margin: 12mm; }
+
+  @media print {
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    html, body { background: #fff; padding: 0; }
+    .screen-only { display: none !important; }
+    #report { display: block; font-size: 10pt; line-height: 1.45; }
+
+    .r-block { break-inside: avoid; page-break-inside: avoid; margin-bottom: 4mm; }
+
+    .r-head { background: var(--black); color: #fff; border-radius: 3mm; padding: 5mm 6mm;
+              border-bottom: 1.2mm solid var(--red);
+              display: flex; justify-content: space-between; align-items: flex-start; gap: 6mm; margin-bottom: 5mm; }
+    .r-head .r-head-left { display: flex; align-items: center; gap: 4mm; }
+    .r-head .r-logo { height: 16mm; width: auto; flex: none; background: #fff; border-radius: 2mm; padding: 1.2mm; }
+    .r-head h1 { font-size: 15pt; line-height: 1.2; }
+    .r-head p  { font-size: 9pt; color: #E5E7EB; margin-top: 1mm; }
+    .r-head small { font-size: 7.5pt; color: #E5E7EB; white-space: nowrap; }
+
+    .r-title { background: var(--red-tint); border-left: 1.4mm solid var(--red); border-radius: 1.5mm;
+               padding: 2mm 4mm; font-weight: 700; color: var(--red-dark); font-size: 11pt; }
+    .r-aliran { font-size: 9pt; margin: 2.5mm 0 3mm; color: var(--gray); font-weight: 700; }
+    .r-aliran b { color: #fff; margin-left: 4mm; padding: 1mm 3mm; border-radius: 1.5mm; }
+    .r-aliran b.keluar { background: var(--red); }
+    .r-aliran b.masuk  { background: var(--black); }
+    .r-hr { border: 0; border-top: 0.3mm solid #E2E8F0; margin: 0 0 4mm; }
+
+    .r-forms { display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; align-items: start; }
+    .r-pill { color: #fff; font-weight: 700; font-size: 10.5pt; padding: 2mm 5mm; border-radius: 2.5mm; margin-bottom: 2mm; }
+    .r-pill.awal  { background: var(--black); }
+    .r-pill.akhir { background: var(--red); }
+    .r-row { display: flex; border-bottom: 0.25mm solid #E2E8F0; padding: 1.6mm 2mm; font-size: 9pt; }
+    .r-row span:first-child { width: 30mm; color: var(--gray); }
+    .r-row span:last-child  { font-weight: 700; color: var(--black); }
+
+    /* FOTO: tinggi mengikuti gambar, dibatasi agar tidak melebihi 1 halaman */
+    .r-photo { margin-top: 4mm; text-align: center; break-inside: avoid; }
+    .r-photo img { display: block; margin: 0 auto; max-width: 100%; max-height: 72mm; width: auto; height: auto;
+                   object-fit: contain; border: 0.3mm solid #E2E8F0; border-radius: 1.5mm; padding: 0.8mm; background: #fff; }
+    .r-photo .cap { font-size: 7.5pt; color: var(--gray); margin-top: 1mm; }
+    .r-nophoto { font-size: 8pt; color: var(--text-light); text-align: center; padding: 6mm 0; border: 0.3mm dashed #CBD5E1; border-radius: 1.5mm; }
+
+    .r-bar { background: #F1F5F9; border-radius: 1.5mm; padding: 1.8mm 4mm; font-weight: 700; color: var(--black); font-size: 9.5pt; }
+
+    .r-sum-head { background: var(--black); color: #fff; font-weight: 700; padding: 2.4mm 5mm; border-radius: 2.5mm; }
+    .r-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; margin: 4mm 0; }
+    .r-card { border-radius: 3mm; padding: 3.5mm 4mm; }
+    .r-card .l { font-size: 8pt; font-weight: 700; }
+    .r-card .v { font-size: 14pt; font-weight: 800; margin-top: 1.5mm; }
+    .r-card.a { background: var(--red-tint); color: var(--red-dark); }
+    .r-card.b { background: #F1F5F9; color: var(--black); }
+    .r-card.c { background: var(--black); color: #fff; }
+    .r-two { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+    .r-two .val { padding: 2mm 4mm; font-weight: 700; font-size: 11pt; overflow-wrap: anywhere; }
+
+    /* Footer mengikuti alur konten (aman, tidak menimpa isi) */
+    .r-footer { border-top: 0.3mm solid #E2E8F0; padding-top: 1.5mm; margin-top: 0;
+                font-size: 7pt; font-weight: 700; color: #94A3B8; break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ TAMPILAN LAYAR: FORM INPUT ============ -->
+<div class="page screen-only">
+  <header class="app-header">
+    <img class="logo" src="https://file.garden/arpYqrjAFKyg93Lt/PT%20Amanah%20Batu%20Alam%20Persada.png" alt="PT. Amanah Batu Alam Persada">
+    <div>
+      <h1>PT. Amanah Batu Alam Persada</h1>
+      <p class="header-title">Perhitungan Fuel Storage (12.000 Liter)</p>
+      <!-- <p class="header-sub">Terra Fuel Tank (12.000 Liter)</p> -->
+    </div>
+  </header>
+
+  <div class="pengumuman">FUEL STORAGE PT ABAP</div>
+
+  <div class="radio-group">
+    <div class="radio-card">
+      <input type="radio" name="flow" id="keluar" value="keluar" checked>
+      <label for="keluar">⬇️ Keluar</label>
+    </div>
+    <div class="radio-card">
+      <input type="radio" name="flow" id="masuk" value="masuk">
+      <label for="masuk">⬆️ Masuk</label>
+    </div>
+  </div>
+  <div class="warn" id="flow-warning"></div>
+
+  <div class="forms">
+    <div class="form-section awal">
+      <div class="section-header"><h2>Form Awal</h2><span class="badge awal-badge">AWAL</span></div>
+      <div class="form-field">
+        <label>Foto</label>
+        <div class="photo-upload">
+          <input type="file" accept="image/*" id="file-awal" aria-label="Upload foto awal">
+          <div class="upload-icon">📷</div>
+          <div class="upload-text" id="text-awal">Klik untuk upload foto</div>
+        </div>
+        <div class="photo-preview" id="preview-awal"><img id="img-awal" alt="Foto awal"></div>
+      </div>
+      <div class="form-field"><label>Tanggal</label><input type="date" id="tanggal-awal"></div>
+      <div class="form-field"><label>Jam (WITA)</label><input type="time" id="jam-awal"></div>
+      <div class="form-field">
+        <label>Ketinggian (cm)</label>
+        <input type="number" id="tinggi-awal" min="0" max="128.46" step="0.01" inputmode="decimal" placeholder="Masukkan ketinggian">
+        <div class="hint" id="hint-awal">Nilai: 0 - 128,46 cm</div>
+      </div>
+      <div class="volume-display">
+        <div class="volume-label">Volume Awal</div>
+        <div class="volume-value" id="volume-awal">0,00</div>
+        <div class="volume-unit">Liter</div>
+      </div>
+    </div>
+
+    <div class="form-section akhir">
+      <div class="section-header"><h2>Form Akhir</h2><span class="badge akhir-badge">AKHIR</span></div>
+      <div class="form-field">
+        <label>Foto</label>
+        <div class="photo-upload">
+          <input type="file" accept="image/*" id="file-akhir" aria-label="Upload foto akhir">
+          <div class="upload-icon">📷</div>
+          <div class="upload-text" id="text-akhir">Klik untuk upload foto</div>
+        </div>
+        <div class="photo-preview" id="preview-akhir"><img id="img-akhir" alt="Foto akhir"></div>
+      </div>
+      <div class="form-field"><label>Tanggal</label><input type="date" id="tanggal-akhir"></div>
+      <div class="form-field"><label>Jam (WITA)</label><input type="time" id="jam-akhir"></div>
+      <div class="form-field">
+        <label>Ketinggian (cm)</label>
+        <input type="number" id="tinggi-akhir" min="0" max="128.46" step="0.01" inputmode="decimal" placeholder="Masukkan ketinggian">
+        <div class="hint" id="hint-akhir">Nilai: 0 - 128,46 cm</div>
+      </div>
+      <div class="volume-display">
+        <div class="volume-label">Volume Akhir</div>
+        <div class="volume-value" id="volume-akhir">0,00</div>
+        <div class="volume-unit">Liter</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="extra-fields">
+    <div class="form-field">
+      <label>Penanggung Jawab</label>
+      <input type="text" id="nama-pj" placeholder="Nama penanggung jawab">
+    </div>
+    <div class="form-field">
+      <label>Keterangan</label>
+      <textarea id="keterangan" placeholder="Tulis keterangan..."></textarea>
+    </div>
+  </div>
+
+  <button class="btn-print" id="btn-print" type="button">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+    </svg>
+    UNDUH PDF
+  </button>
+</div>
+
+<!-- ============ LAPORAN CETAK (diisi otomatis dari data form) ============ -->
+<div id="report">
+  <div class="r-head">
+    <div class="r-head-left">
+      <img class="r-logo" src="https://file.garden/arpYqrjAFKyg93Lt/PT%20Amanah%20Batu%20Alam%20Persada.png" alt="PT. Amanah Batu Alam Persada">
+      <div>
+        <h1>PT. Amanah Batu Alam Persada</h1>
+        <p>Perhitungan Fuel Storage (12.000 Liter)</p>
+      </div>
+    </div>
+    <small id="r-generated"></small>
+  </div>
+
+  <div class="r-block">
+    <div class="r-title" id="r-title">Pengisian Fuel Untuk Pompa</div>
+    <div class="r-aliran">Aliran:<b id="r-aliran"></b></div>
+    <hr class="r-hr">
+
+    <div class="r-forms">
+      <div>
+        <div class="r-pill awal">FORM AWAL</div>
+        <div class="r-row"><span>Tanggal</span><span id="r-tgl-awal"></span></div>
+        <div class="r-row"><span>Jam (WITA)</span><span id="r-jam-awal"></span></div>
+        <div class="r-row"><span>Ketinggian</span><span id="r-tinggi-awal"></span></div>
+        <div class="r-row"><span>Volume</span><span id="r-vol-awal"></span></div>
+        <div class="r-photo" id="r-photo-awal"></div>
+      </div>
+      <div>
+        <div class="r-pill akhir">FORM AKHIR</div>
+        <div class="r-row"><span>Tanggal</span><span id="r-tgl-akhir"></span></div>
+        <div class="r-row"><span>Jam (WITA)</span><span id="r-jam-akhir"></span></div>
+        <div class="r-row"><span>Ketinggian</span><span id="r-tinggi-akhir"></span></div>
+        <div class="r-row"><span>Volume</span><span id="r-vol-akhir"></span></div>
+        <div class="r-photo" id="r-photo-akhir"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="r-block">
+    <div class="r-sum-head">RINGKASAN</div>
+    <div class="r-cards">
+      <div class="r-card a"><div class="l">Vol Awal</div><div class="v" id="r-sum-awal"></div></div>
+      <div class="r-card b"><div class="l">Vol Akhir</div><div class="v" id="r-sum-akhir"></div></div>
+      <div class="r-card c"><div class="l" id="r-sum-label">Tambah</div><div class="v" id="r-sum-tambah"></div></div>
+    </div>
+    <div class="r-two">
+      <div><div class="r-bar">Lama Pengisian</div><div class="val" id="r-durasi"></div></div>
+      <div><div class="r-bar">Penanggung Jawab</div><div class="val" id="r-pj"></div></div>
+    </div>
+  </div>
+
+  <div class="r-footer">PT. Amanah Batu Alam Persada</div>
+</div>
+
+<script>
+const P = 5.24635, D1 = 2.33673, D2 = 1.2846;
+const H_MAX = D2 * 100;              // 128,46 cm (tinggi penuh tangki)
+const $ = id => document.getElementById(id);
+const photos = { awal: null, akhir: null };   // elemen <img> hasil kompres (sudah ter-decode)
+
+/* ---------- Perhitungan ---------- */
+function calculateVolume(H) {
+  const a = D1 / 2, b = D2 / 2;
+  const t = Math.max(-1, Math.min(1, (H / 100 - b) / b));
+  const vol = a * b * (Math.PI / 2 + Math.asin(t) + t * Math.sqrt(1 - t * t)) * P * 1000;
+  return isFinite(vol) ? vol : 0;
+}
+function fmt(val) {
+  const parts = val.toFixed(2).split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return parts.join(',');
+}
+function tanggalIndo(s) {
+  if (!s) return '-';
+  const n = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const d = new Date(s + 'T00:00:00');
+  return d.getDate() + ' ' + n[d.getMonth()] + ' ' + d.getFullYear();
+}
+const pad = n => String(n).padStart(2, '0');
+function generatedText() {
+  const n = nowWITA();
+  return 'Generated: ' + n.getUTCDate() + '/' + (n.getUTCMonth() + 1) + '/' + n.getUTCFullYear() + ', ' +
+         pad(n.getUTCHours()) + '.' + pad(n.getUTCMinutes()) + '.' + pad(n.getUTCSeconds()) + ' WITA';
+}
+/* WITA dinamis: Asia/Makassar (UTC+8), benar berapa pun timezone browser */
+function nowWITA() {
+  const d = new Date();
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Makassar', hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
+  }).formatToParts(d);
+  const get = t => parts.find(p => p.type === t).value;
+  return new Date(Date.UTC(+get('year'), +get('month') - 1, +get('day'), +get('hour'), +get('minute'), +get('second')));
+}
+function heightOf(side) {
+  const v = parseFloat($('tinggi-' + side).value);
+  return isNaN(v) || v < 0 ? 0 : Math.min(v, H_MAX);
+}
+
+/* ---------- Update layar ---------- */
+function updateVolume(side) {
+  const raw = parseFloat($('tinggi-' + side).value);
+  const hint = $('hint-' + side);
+  if (!isNaN(raw) && (raw > H_MAX || raw < 0)) {
+    hint.textContent = 'Di luar batas tangki (0 - ' + fmt(H_MAX) + ' cm), dihitung sebagai ' + fmt(heightOf(side)) + ' cm';
+    hint.classList.add('err');
+  } else {
+    hint.textContent = 'Nilai: 0 - ' + fmt(H_MAX) + ' cm';
+    hint.classList.remove('err');
+  }
+  $('volume-' + side).textContent = fmt(calculateVolume(heightOf(side)));
+  checkFlow();
+}
+function checkFlow() {
+  const diff = calculateVolume(heightOf('akhir')) - calculateVolume(heightOf('awal'));
+  const flow = document.querySelector('input[name="flow"]:checked').value;
+  let msg = '';
+  if (diff > 0.005 && flow === 'keluar') msg = 'Volume bertambah, tetapi aliran dipilih "Keluar". Periksa kembali.';
+  if (diff < -0.005 && flow === 'masuk') msg = 'Volume berkurang, tetapi aliran dipilih "Masuk". Periksa kembali.';
+  $('flow-warning').textContent = msg;
+}
+
+/* ---------- Foto: koreksi orientasi + perkecil (max 1400px) ---------- */
+async function compressPhoto(file, maxSide = 1400, quality = 0.85) {
+  const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+  const scale = Math.min(1, maxSide / Math.max(bmp.width, bmp.height));
+  const c = document.createElement('canvas');
+  c.width = Math.round(bmp.width * scale);
+  c.height = Math.round(bmp.height * scale);
+  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+  bmp.close && bmp.close();
+  return c.toDataURL('image/jpeg', quality);
+}
+function renderPhoto(side) {
+  const box = $('r-photo-' + side);
+  box.replaceChildren();
+  if (photos[side]) {
+    const cap = document.createElement('div'); cap.className = 'cap'; cap.textContent = 'Foto ' + side;
+    box.append(photos[side], cap);
+  } else {
+    const d = document.createElement('div'); d.className = 'r-nophoto'; d.textContent = 'Tidak ada foto';
+    box.append(d);
+  }
+}
+function setupPhoto(side) {
+  $('file-' + side).addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const dataUrl = await compressPhoto(file);
+      const img = new Image();
+      img.alt = 'Foto ' + side; img.decoding = 'sync'; img.loading = 'eager';
+      img.src = dataUrl;
+      await img.decode();                       // pastikan gambar SUDAH siap sebelum dicetak
+      photos[side] = img;                       // elemen <img> disimpan & dipakai ulang, tidak dibuat ulang saat print
+      $('img-' + side).src = dataUrl;
+      $('preview-' + side).style.display = 'block';
+      $('text-' + side).textContent = file.name + ' (klik untuk ganti)';
+      renderPhoto(side);
+    } catch (err) {
+      photos[side] = null; renderPhoto(side);
+      alert('Foto tidak dapat dibaca. Coba file JPG/PNG lain.');
+    }
+  });
+}
+
+/* ---------- Isi laporan cetak ---------- */
+function durasi() {
+  const ta = $('tanggal-awal').value, tb = $('tanggal-akhir').value;
+  const ja = $('jam-awal').value, jb = $('jam-akhir').value;
+  if (!ta || !tb || !ja || !jb) return '-';
+  const min = Math.round((new Date(tb + 'T' + jb) - new Date(ta + 'T' + ja)) / 60000);
+  if (!(min > 0)) return '-';
+  return Math.floor(min / 60) + ' jam ' + (min % 60) + ' menit';
+}
+function buildReport() {
+  const vA = calculateVolume(heightOf('awal')), vB = calculateVolume(heightOf('akhir'));
+  const diff = vB - vA;
+  const flow = document.querySelector('input[name="flow"]:checked').value;
+
+  $('r-generated').textContent = generatedText();
+  $('r-aliran').textContent = flow === 'keluar' ? '⬇ Keluar' : '⬆ Masuk';
+  $('r-aliran').className = flow;
+  $('r-title').textContent = $('keterangan').value.trim() || 'Pengisian Fuel Untuk Pompa';
+  ['awal', 'akhir'].forEach(s => {
+    $('r-tgl-' + s).textContent = tanggalIndo($('tanggal-' + s).value);
+    $('r-jam-' + s).textContent = $('jam-' + s).value || '-';
+    $('r-tinggi-' + s).textContent = fmt(heightOf(s)).replace(/,00$/, '') + ' cm';
+    $('r-vol-' + s).textContent = fmt(s === 'awal' ? vA : vB) + ' liter';
+  });
+  $('r-sum-awal').textContent = fmt(vA) + ' L';
+  $('r-sum-akhir').textContent = fmt(vB) + ' L';
+  $('r-sum-label').textContent = diff >= 0 ? 'Bertambah' : 'Berkurang';
+  $('r-sum-tambah').textContent = fmt(Math.abs(diff)) + ' L';
+  $('r-durasi').textContent = durasi();
+  $('r-pj').textContent = $('nama-pj').value.trim() || '-';
+}
+
+/* ---------- Event ---------- */
+setupPhoto('awal'); setupPhoto('akhir'); renderPhoto('awal'); renderPhoto('akhir');
+['awal', 'akhir'].forEach(s => $('tinggi-' + s).addEventListener('input', () => updateVolume(s)));
+document.querySelectorAll('input[name="flow"]').forEach(r => r.addEventListener('change', checkFlow));
+window.addEventListener('beforeprint', buildReport);   // juga jalan saat Ctrl+P
+$('btn-print').addEventListener('click', async () => {
+  buildReport();
+  // tunggu semua gambar di laporan benar-benar ter-decode sebelum dialog print dibuka
+  await Promise.all([...document.querySelectorAll('#report img')].map(i => i.decode().catch(() => {})));
+  window.print();
+});
+
+/* Nilai awal (WITA) */
+const now = nowWITA();
+const today = now.getUTCFullYear() + '-' + pad(now.getUTCMonth() + 1) + '-' + pad(now.getUTCDate());
+const hhmm = pad(now.getUTCHours()) + ':' + pad(now.getUTCMinutes());
+$('tanggal-awal').value = today; $('tanggal-akhir').value = today;
+$('jam-awal').value = hhmm;      $('jam-akhir').value = hhmm;
+updateVolume('awal'); updateVolume('akhir');
+</script>
+</body>
+</html>
